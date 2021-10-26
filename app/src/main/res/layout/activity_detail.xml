@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff3f3f3"
+    >
+
+    <ImageView
+        android:id="@+id/cover_bg"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:src="@color/main_color"
+        />
+
+    <RelativeLayout
+        android:id="@+id/subscription_container"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white"
+        android:layout_below="@id/cover_bg"
+        >
+
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="14dp"
+            android:gravity="center"
+            android:background="@drawable/shape_subscription_bg"
+            android:textColor="@color/white"
+            android:text="+ 订阅"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/play_control_container"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#e8e8e8"
+        android:layout_below="@id/subscription_container">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/detail_play_control"
+        android:layout_width="19dp"
+        android:layout_height="19dp"
+        android:layout_marginLeft="10dp"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/play_normal"
+        />
+
+        <TextView
+            android:id="@+id/play_control_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/detail_play_control"
+            android:layout_centerVertical="true"
+            android:textSize="16sp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="100dp"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:text="继续播放"/>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:textSize="16sp"
+            android:layout_alignParentRight="true"
+            android:layout_toLeftOf="@id/detail_arrow"
+            android:layout_marginRight="20dp"
+            android:text="选集"/>
+
+        <ImageView
+            android:id="@+id/detail_arrow"
+            android:layout_width="10dp"
+            android:layout_height="5dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="5dp"
+            android:src="@mipmap/arrow_icon"/>
+
+</RelativeLayout>
+
+
+    <FrameLayout
+        android:id="@+id/detail_list_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/play_control_container">
+
+    </FrameLayout>
+
+
+    <com.hq.ximalaya.views.RoundRectImageView
+        android:id="@+id/viv_small_cover"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_below="@id/cover_bg"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="-40dp"
+        />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@id/cover_bg"
+        android:layout_toRightOf="@id/viv_small_cover"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="-20dp"
+        >
+        <TextView
+            android:id="@+id/tv_album_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/white"
+            android:text="这是标题"/>
+        <TextView
+            android:id="@+id/tv_album_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/sub_text_title"
+            android:text="这是作者"/>
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+</RelativeLayout>
