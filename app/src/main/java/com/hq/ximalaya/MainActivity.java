@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -17,8 +18,10 @@ import com.hq.ximalaya.adapters.IndicatorAdapter;
 import com.hq.ximalaya.adapters.MainContentAdapter;
 import com.hq.ximalaya.interfaces.IPlayerCallback;
 import com.hq.ximalaya.presenters.PlayPresenter;
+import com.hq.ximalaya.presenters.RecommendPresenter;
 import com.hq.ximalaya.utils.LogUtil;
 import com.hq.ximalaya.views.RoundRectImageView;
+import com.ximalaya.ting.android.opensdk.model.album.Album;
 import com.ximalaya.ting.android.opensdk.model.track.Track;
 import com.ximalaya.ting.android.opensdk.player.XmPlayerManager;
 import com.ximalaya.ting.android.opensdk.player.service.XmPlayListControl;
@@ -39,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements IPlayerCallback {
     private TextView mSubTitle;
     private ImageView mPlayControl;
     private PlayPresenter mPlayerPresenter;
+    private View mPlayControlItem;
+    private View mSearchBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,14 +81,51 @@ public class MainActivity extends AppCompatActivity implements IPlayerCallback {
             @Override
             public void onClick(View v) {
                 if (mPlayerPresenter != null) {
-                    if (mPlayerPresenter.isPlay()) {
-                        mPlayerPresenter.pause();
+                    boolean hasPlayList = mPlayerPresenter.hasPlayList();
+                    if (!hasPlayList) {
+                        playFirstRecommend();
                     } else {
-                        mPlayerPresenter.play();
+                        if (mPlayerPresenter.isPlay()) {
+                            mPlayerPresenter.pause();
+                        } else {
+                            mPlayerPresenter.play();
+                        }
                     }
+
                 }
             }
         });
+
+        mPlayControlItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean hasPlayList = mPlayerPresenter.hasPlayList();
+                if (!hasPlayList) {
+                    playFirstRecommend();
+                }
+                startActivity(new Intent(MainActivity.this, PlayerActivity.class));
+            }
+        });
+
+        mSearchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                startActivity(intent);
+            }
+        });
+
+    }
+
+    private void playFirstRecommend() {
+        List<Album> currentRecommend = RecommendPresenter.getInstance().getCurrentRecommend();
+        if (currentRecommend != null && currentRecommend.size() > 0) {
+            Album album = currentRecommend.get(0);
+            long id = album.getId();
+            if (mPlayerPresenter != null) {
+                mPlayerPresenter.playByAlbumId(id);
+            }
+        }
     }
 
     // optional + 回车 补全代码
@@ -111,6 +153,10 @@ public class MainActivity extends AppCompatActivity implements IPlayerCallback {
         mHeaderTitle.setSelected(true);
         mSubTitle = findViewById(R.id.main_sub_title);
         mPlayControl = findViewById(R.id.main_play_control);
+
+        mPlayControlItem = findViewById(R.id.main_play_control_item);
+
+        mSearchBtn = findViewById(R.id.search_btn);
     }
 
     @Override

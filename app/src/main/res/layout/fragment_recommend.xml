@@ -3,11 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recommend_list"
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        android:id="@+id/over_scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#fff4f4f4"
-        android:overScrollMode="never" />
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recommend_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#fff4f4f4"
+            android:overScrollMode="never" />
+
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+
 
 </RelativeLayout>

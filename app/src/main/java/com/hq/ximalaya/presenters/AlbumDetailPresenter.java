@@ -1,20 +1,16 @@
 package com.hq.ximalaya.presenters;
 
+import com.hq.ximalaya.data.XimalayaApi;
 import com.hq.ximalaya.interfaces.IAlbumDetailPresenter;
 import com.hq.ximalaya.interfaces.IAlbumDetailViewCallback;
-import com.hq.ximalaya.utils.Constants;
 import com.hq.ximalaya.utils.LogUtil;
-import com.ximalaya.ting.android.opensdk.constants.DTransferConstants;
-import com.ximalaya.ting.android.opensdk.datatrasfer.CommonRequest;
 import com.ximalaya.ting.android.opensdk.datatrasfer.IDataCallBack;
 import com.ximalaya.ting.android.opensdk.model.album.Album;
 import com.ximalaya.ting.android.opensdk.model.track.Track;
 import com.ximalaya.ting.android.opensdk.model.track.TrackList;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class AlbumDetailPresenter implements IAlbumDetailPresenter {
     private static final String TAG = "AlbumDetailPresenter";
@@ -50,13 +46,7 @@ public class AlbumDetailPresenter implements IAlbumDetailPresenter {
     }
 
     private void doLoaded(final boolean isLoadMore) {
-        Map<String, String> map = new HashMap<>();
-        map.put(DTransferConstants.ALBUM_ID, mCurrentAlbumId + "");
-        map.put(DTransferConstants.SORT, "asc");
-        map.put(DTransferConstants.PAGE, mCurrentPageIndex + "");
-        map.put(DTransferConstants.PAGE_SIZE, Constants.TRACK_COUNT + "");
-
-        CommonRequest.getTracks(map, new IDataCallBack<TrackList>() {
+        XimalayaApi.getInstance().getAlbumDetail(new IDataCallBack<TrackList>() {
             @Override
             public void onSuccess(TrackList trackList) {
                 if (trackList != null) {
@@ -80,7 +70,7 @@ public class AlbumDetailPresenter implements IAlbumDetailPresenter {
                 LogUtil.d(TAG, "error ---> " + errorCode + " msg ----> " + errorMsg);
                 handlerError(errorCode, errorMsg);
             }
-        });
+        }, mCurrentAlbumId, mCurrentPageIndex);
     }
 
     private void handlerLoaderMoreResult(int size) {

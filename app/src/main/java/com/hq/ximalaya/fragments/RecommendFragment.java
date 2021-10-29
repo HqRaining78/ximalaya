@@ -16,6 +16,7 @@ import com.hq.ximalaya.interfaces.IRecommendCallback;
 import com.hq.ximalaya.presenters.AlbumDetailPresenter;
 import com.hq.ximalaya.presenters.RecommendPresenter;
 import com.hq.ximalaya.views.UILoader;
+import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.ximalaya.ting.android.opensdk.model.album.Album;
 
 import net.lucode.hackware.magicindicator.buildins.UIUtil;
@@ -55,6 +56,11 @@ public class RecommendFragment extends BaseFragment implements IRecommendCallbac
         mRootView = layoutInflater.inflate(R.layout.fragment_recommend, container, false);
 
         mRecommendListView = mRootView.findViewById(R.id.recommend_list);
+        SmartRefreshLayout smartRefreshLayout = mRootView.findViewById(R.id.over_scroll_view);
+        smartRefreshLayout.setReboundDuration(300);//回弹动画时长（毫秒）
+        smartRefreshLayout.setEnableRefresh(false);//是否启用下拉刷新功能
+        smartRefreshLayout.setEnableLoadMore(false);
+        smartRefreshLayout.setEnableOverScrollBounce(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecommendListView.setLayoutManager(linearLayoutManager);

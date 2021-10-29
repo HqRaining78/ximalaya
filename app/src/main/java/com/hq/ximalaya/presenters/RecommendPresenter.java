@@ -1,23 +1,20 @@
 package com.hq.ximalaya.presenters;
 
+import com.hq.ximalaya.data.XimalayaApi;
 import com.hq.ximalaya.interfaces.IRecommendCallback;
 import com.hq.ximalaya.interfaces.IRecommendPresenter;
-import com.hq.ximalaya.utils.Constants;
 import com.hq.ximalaya.utils.LogUtil;
-import com.ximalaya.ting.android.opensdk.constants.DTransferConstants;
-import com.ximalaya.ting.android.opensdk.datatrasfer.CommonRequest;
 import com.ximalaya.ting.android.opensdk.datatrasfer.IDataCallBack;
 import com.ximalaya.ting.android.opensdk.model.album.Album;
 import com.ximalaya.ting.android.opensdk.model.album.GussLikeAlbumList;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RecommendPresenter implements IRecommendPresenter {
     public static final String TAG = "RecommendPresenter";
     private List<IRecommendCallback> mCallbacks = new ArrayList<>();
+    private List<Album> mCurrentRecommend = null;
 
     private RecommendPresenter() {}
     private static RecommendPresenter sInstance = null;
@@ -40,9 +37,7 @@ public class RecommendPresenter implements IRecommendPresenter {
 
     // 获取推荐内容
     private void getRecommendData() {
-        Map<String, String> map = new HashMap<>();
-        map.put(DTransferConstants.LIKE_COUNT, Constants.RECOMMEND_COUNT + "");
-        CommonRequest.getGuessLikeAlbum(map, new IDataCallBack<GussLikeAlbumList>() {
+        XimalayaApi.getInstance().getRecommendList(new IDataCallBack<GussLikeAlbumList>() {
             @Override
             public void onSuccess(GussLikeAlbumList gussLikeAlbumList) {
                 if (gussLikeAlbumList != null) {
@@ -83,6 +78,7 @@ public class RecommendPresenter implements IRecommendPresenter {
                     for (IRecommendCallback callback : mCallbacks) {
                         callback.onRecommendListLoaded(albumList);
                     }
+                    this.mCurrentRecommend = albumList;
                 }
             }
         }
@@ -93,6 +89,10 @@ public class RecommendPresenter implements IRecommendPresenter {
         for (IRecommendCallback callback : mCallbacks) {
             callback.onLoading();
         }
+    }
+
+    public List<Album> getCurrentRecommend() {
+        return mCurrentRecommend;
     }
 
     @Override

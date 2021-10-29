@@ -29,4 +29,6 @@ public interface IPlayerPresenter extends BasePresenter<IPlayerCallback> {
 
     void reversePlayList();
 
+    // 播放专辑的第一首
+    void playByAlbumId(long id);
 }
