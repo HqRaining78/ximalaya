@@ -20,8 +20,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.hq.ximalaya.adapters.DetailListAdapter;
 import com.hq.ximalaya.interfaces.IAlbumDetailViewCallback;
 import com.hq.ximalaya.interfaces.IPlayerCallback;
+import com.hq.ximalaya.interfaces.ISubscriptionCallback;
 import com.hq.ximalaya.presenters.AlbumDetailPresenter;
 import com.hq.ximalaya.presenters.PlayPresenter;
+import com.hq.ximalaya.presenters.SubscriptionPresenter;
 import com.hq.ximalaya.utils.ImageBlur;
 import com.hq.ximalaya.views.RoundRectImageView;
 import com.hq.ximalaya.views.UILoader;
@@ -41,7 +43,7 @@ import net.lucode.hackware.magicindicator.buildins.UIUtil;
 
 import java.util.List;
 
-public class DetailActivity extends BaseActivity implements IAlbumDetailViewCallback, UILoader.OnRetryClickListener, DetailListAdapter.ItemClickListener, IPlayerCallback {
+public class DetailActivity extends BaseActivity implements IAlbumDetailViewCallback, UILoader.OnRetryClickListener, DetailListAdapter.ItemClickListener, IPlayerCallback, ISubscriptionCallback {
     private ImageView mLargerCover;
     private RoundRectImageView mSmallCover;
     private TextView mAlbumTitle;
@@ -60,6 +62,9 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
     public static final int DEFAULT_PLAY_INDEX = 0;
     private SmartRefreshLayout mRefreshLayout;
     private String mTrackTitle = null;
+    private TextView mSubBtn;
+    private SubscriptionPresenter mSubscriptionPresenter;
+    private Album mCurrentAlbum = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,12 +74,45 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
         getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         initView();
+        initPresenter();
+        updateSubState();
+        updatePlayState(mPlayPresenter.isPlay());
         initEvent();
+    }
+
+    private void updateSubState() {
+        if (mSubscriptionPresenter != null) {
+            boolean isSub = mSubscriptionPresenter.isSub(mCurrentAlbum);
+            mSubBtn.setText(isSub ? R.string.cancel_sub_tips_text : R.string.sub_tips_text);
+        }
+    }
+
+    private void initPresenter() {
         mDetailPresenter = AlbumDetailPresenter.getInstance();
         mDetailPresenter.registerViewCallback(this);
         mPlayPresenter = PlayPresenter.getPlayPresenter();
         mPlayPresenter.registerViewCallback(this);
-        updatePlayState(mPlayPresenter.isPlay());
+        mSubscriptionPresenter = SubscriptionPresenter.getInstance();
+        mSubscriptionPresenter.registerViewCallback(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mPlayPresenter != null) {
+            mPlayPresenter.unRegisterViewCallback(this);
+            mPlayPresenter = null;
+        }
+
+        if (mSubscriptionPresenter != null) {
+            mSubscriptionPresenter.unRegisterViewCallback(this);
+            mSubscriptionPresenter = null;
+        }
+
+        if (mDetailPresenter != null) {
+            mDetailPresenter.unRegisterViewCallback(this);
+            mDetailPresenter = null;
+        }
     }
 
     private void updatePlayState(boolean play) {
@@ -103,6 +141,14 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
                         handlePlayControl();
                     }
                 }
+            }
+        });
+
+
+        mSubBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                
             }
         });
     }
@@ -140,6 +186,9 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
         mPlayControl = findViewById(R.id.detail_play_control);
         mPlayControlTips = findViewById(R.id.play_control_tv);
         mPlayControlTips.setSelected(true);
+
+        mSubBtn = findViewById(R.id.detail_sub_btn);
+
     }
 
     private View createSuccessView(ViewGroup container) {
@@ -205,6 +254,7 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
 
     @Override
     public void onAlbumLoaded(Album album) {
+        mCurrentAlbum = album;
         mCurrentId = album.getId();
         if (mDetailPresenter != null) {
             mDetailPresenter.getAlbumDetail(album.getId(), mCurrentPage);
@@ -344,6 +394,21 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
 
     @Override
     public void updateListOrder(boolean isReverse) {
+
+    }
+
+    @Override
+    public void onAddResult(boolean isSuccess) {
+
+    }
+
+    @Override
+    public void onDeleteResult(boolean isSuccess) {
+
+    }
+
+    @Override
+    public void onSubscriptionLoaded(List<Album> result) {
 
     }
 }

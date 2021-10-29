@@ -59,6 +59,7 @@ dependencies {
     implementation  'com.scwang.smart:refresh-header-two-level:2.0.3'   //二级刷新头
     implementation  'com.scwang.smart:refresh-footer-ball:2.0.3'        //球脉冲加载
     implementation  'com.scwang.smart:refresh-footer-classics:2.0.3'    //经典加载
+    implementation "io.reactivex.rxjava3:rxjava:3.1.2"
 
 
 }

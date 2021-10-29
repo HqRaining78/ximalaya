@@ -8,4 +8,7 @@ public interface ISubscriptionPresenter extends BasePresenter<ISubscriptionCallb
     void deleteSubscription(Album album);
 
     void getSubscriptionList();
+
+    boolean isSub(Album album);
+
 }
