@@ -17,8 +17,30 @@ public class XimalayaDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String s = "create table " + Constants.SUB_TB_NAME + "(" + Constants.SUB_ID + " integer primary key autoincrement, " + Constants.SUB_COVER_URL + " varchar, " + Constants.SUB_TITLE + " varchar, "+ Constants.SUB_DESCRIPTION +" varchar, "+ Constants.SUB_PLAY_COUNT +" integer, " + Constants.SUB_TRACKS_COUNT + " integer, " + Constants.SUB_AUTHOR_NAME + " varchar, " + Constants.SUB_ALBUM_ID + " integer)";
-        db.execSQL(s);
+        String subTbSql = "create table " + Constants.SUB_TB_NAME + "(" +
+                Constants.SUB_ID + " integer primary key autoincrement, " +
+                Constants.SUB_COVER_URL + " varchar, " +
+                Constants.SUB_TITLE + " varchar," +
+                Constants.SUB_DESCRIPTION + " varchar," +
+                Constants.SUB_PLAY_COUNT + " integer," +
+                Constants.SUB_TRACKS_COUNT + " integer," +
+                Constants.SUB_AUTHOR_NAME + " varchar," +
+                Constants.SUB_ALBUM_ID + " integer" +
+                ")";
+        db.execSQL(subTbSql);
+
+        String historyTbSql = "create table " + Constants.HISTORY_TB_NAME + "(" +
+                Constants.HISTORY_ID + " integer primary key autoincrement, " +
+                Constants.HISTORY_TRACK_ID + " integer, " +
+                Constants.HISTORY_TITLE + " varchar," +
+                Constants.HISTORY_PLAY_COUNT + " integer," +
+                Constants.HISTORY_DURATION + " integer," +
+                Constants.HISTORY_UPDATE_TIME + " integer," +
+                Constants.HISTORY_ORDER_NUM + " integer," +
+                Constants.HISTORY_AUTHOR + " varchar," +
+                Constants.HISTORY_COVER + " varchar" +
+                ")";
+        db.execSQL(historyTbSql);
     }
 
     @Override

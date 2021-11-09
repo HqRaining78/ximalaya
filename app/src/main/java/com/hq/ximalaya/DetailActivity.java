@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,9 +22,11 @@ import com.hq.ximalaya.adapters.DetailListAdapter;
 import com.hq.ximalaya.interfaces.IAlbumDetailViewCallback;
 import com.hq.ximalaya.interfaces.IPlayerCallback;
 import com.hq.ximalaya.interfaces.ISubscriptionCallback;
+import com.hq.ximalaya.interfaces.ISubscriptionPresenter;
 import com.hq.ximalaya.presenters.AlbumDetailPresenter;
 import com.hq.ximalaya.presenters.PlayPresenter;
 import com.hq.ximalaya.presenters.SubscriptionPresenter;
+import com.hq.ximalaya.utils.Constants;
 import com.hq.ximalaya.utils.ImageBlur;
 import com.hq.ximalaya.views.RoundRectImageView;
 import com.hq.ximalaya.views.UILoader;
@@ -93,6 +96,7 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
         mPlayPresenter = PlayPresenter.getPlayPresenter();
         mPlayPresenter.registerViewCallback(this);
         mSubscriptionPresenter = SubscriptionPresenter.getInstance();
+        mSubscriptionPresenter.getSubscriptionList();
         mSubscriptionPresenter.registerViewCallback(this);
     }
 
@@ -148,7 +152,15 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
         mSubBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                
+                if (mSubscriptionPresenter != null) {
+                    boolean isSub = mSubscriptionPresenter.isSub(mCurrentAlbum);
+                    //如果没有订阅，就去订阅，如果已经订阅了，那么就取消订阅
+                    if (isSub) {
+                        mSubscriptionPresenter.deleteSubscription(mCurrentAlbum);
+                    } else {
+                        mSubscriptionPresenter.addSubscription(mCurrentAlbum);
+                    }
+                }
             }
         });
     }
@@ -399,16 +411,33 @@ public class DetailActivity extends BaseActivity implements IAlbumDetailViewCall
 
     @Override
     public void onAddResult(boolean isSuccess) {
-
+        if (isSuccess) {
+            //如果成功了，那就修改UI成取消订阅
+            mSubBtn.setText(R.string.cancel_sub_tips_text);
+        }
+        //给个toast
+        String tipsText = isSuccess ? "订阅成功" : "订阅失败";
+        Toast.makeText(this, tipsText, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onDeleteResult(boolean isSuccess) {
-
+        if (isSuccess) {
+            //如果成功了，那就修改UI成取消订阅
+            mSubBtn.setText(R.string.sub_tips_text);
+        }
+        //给个toast
+        String tipsText = isSuccess ? "删除成功" : "删除失败";
+        Toast.makeText(this, tipsText, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onSubscriptionLoaded(List<Album> result) {
 
+    }
+
+    @Override
+    public void onSubFull() {
+        Toast.makeText(this, "订阅数量不得超过" + Constants.MAX_SUB_COUNT, Toast.LENGTH_SHORT).show();
     }
 }

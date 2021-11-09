@@ -1,13 +1,16 @@
 package com.hq.ximalaya.data;
 
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.provider.ContactsContract;
 
 import com.hq.ximalaya.base.BaseApplication;
+import com.hq.ximalaya.data.ISubDao;
+import com.hq.ximalaya.data.ISubDaoCallback;
+import com.hq.ximalaya.data.XimalayaDBHelper;
+
 import com.hq.ximalaya.utils.Constants;
+import com.hq.ximalaya.utils.LogUtil;
 import com.ximalaya.ting.android.opensdk.model.album.Album;
 import com.ximalaya.ting.android.opensdk.model.album.Announcer;
 
@@ -16,6 +19,7 @@ import java.util.List;
 
 public class SubscriptionDAO implements ISubDao {
     private static final SubscriptionDAO ourInstance = new SubscriptionDAO();
+    private static final String TAG = "SubscriptionDao";
     private final XimalayaDBHelper mXimalayaDBHelper;
     private ISubDaoCallback mCallback = null;
 
@@ -34,11 +38,13 @@ public class SubscriptionDAO implements ISubDao {
 
     @Override
     public void addAlbum(Album album) {
-        SQLiteDatabase database = null;
+        SQLiteDatabase db = null;
+        boolean isAddSuccess = false;
         try {
-            database = mXimalayaDBHelper.getWritableDatabase();
-            database.beginTransaction();
+            db = mXimalayaDBHelper.getWritableDatabase();
+            db.beginTransaction();
             ContentValues contentValues = new ContentValues();
+            //封装数据
             contentValues.put(Constants.SUB_COVER_URL, album.getCoverUrlLarge());
             contentValues.put(Constants.SUB_TITLE, album.getAlbumTitle());
             contentValues.put(Constants.SUB_DESCRIPTION, album.getAlbumIntro());
@@ -46,98 +52,104 @@ public class SubscriptionDAO implements ISubDao {
             contentValues.put(Constants.SUB_PLAY_COUNT, album.getPlayCount());
             contentValues.put(Constants.SUB_AUTHOR_NAME, album.getAnnouncer().getNickname());
             contentValues.put(Constants.SUB_ALBUM_ID, album.getId());
-
-            database.insert(Constants.SUB_TB_NAME, null, contentValues);
-            database.setTransactionSuccessful();
-            if (mCallback != null) {
-                mCallback.onAddResult(true);
-            }
+            //插入数据
+            db.insert(Constants.SUB_TB_NAME, null, contentValues);
+            db.setTransactionSuccessful();
+            isAddSuccess = true;
         } catch (Exception e) {
             e.printStackTrace();
-            if (mCallback != null) {
-                mCallback.onAddResult(false);
-            }
+            isAddSuccess = false;
         } finally {
-            if (database != null) {
-                database.endTransaction();
-                database.close();
+            if (db != null) {
+                db.endTransaction();
+                db.close();
+            }
+            if (mCallback != null) {
+                mCallback.onAddResult(isAddSuccess);
             }
         }
     }
 
     @Override
     public void delAlbum(Album album) {
-        SQLiteDatabase database = null;
+        SQLiteDatabase db = null;
+        boolean isDeleteSuccess = false;
         try {
-            database = mXimalayaDBHelper.getWritableDatabase();
-            database.beginTransaction();
-            database.delete(Constants.SUB_TB_NAME, Constants.SUB_ALBUM_ID + "=? ", new String[]{album.getId() + ""});
-            database.setTransactionSuccessful();
-            if (mCallback != null) {
-                mCallback.onDeleteResult(true);
-            }
+            db = mXimalayaDBHelper.getWritableDatabase();
+            db.beginTransaction();
+            int delete = db.delete(Constants.SUB_TB_NAME, Constants.SUB_ALBUM_ID + "=?", new String[]{album.getId() + ""});
+            LogUtil.d(TAG, "delete -- > " + delete);
+            db.setTransactionSuccessful();
+            isDeleteSuccess = true;
         } catch (Exception e) {
             e.printStackTrace();
-            if (mCallback != null) {
-                mCallback.onDeleteResult(false);
-            }
+            isDeleteSuccess = false;
         } finally {
-            if (database != null) {
-                database.endTransaction();
-                database.close();
+            if (db != null) {
+                db.endTransaction();
+                db.close();
+            }
+            if (mCallback != null) {
+                mCallback.onDeleteResult(isDeleteSuccess);
             }
         }
     }
 
     @Override
     public void listAlbums() {
-        SQLiteDatabase database = null;
+        SQLiteDatabase db = null;
         List<Album> result = new ArrayList<>();
         try {
-            database = mXimalayaDBHelper.getWritableDatabase();
-            database.beginTransaction();
-            Cursor query = database.query(Constants.SUB_TB_NAME, null, null, null, null, null, null);
-            while (query.moveToNext()) {                Album album = new Album();
-                int coverUrlIndex = query.getColumnIndex(Constants.SUB_COVER_URL);
-                String coverUrl = query.getString(coverUrlIndex);
+            db = mXimalayaDBHelper.getReadableDatabase();
+            db.beginTransaction();
+            Cursor query = db.query(Constants.SUB_TB_NAME, null, null, null, null, null, "_id desc");
+            //封装数据
+            while (query.moveToNext()) {
+                Album album = new Album();
+                //封面图片
+                int coverIndex = query.getColumnIndex(Constants.SUB_COVER_URL);
+                String coverUrl = query.getString(coverIndex);
                 album.setCoverUrlLarge(coverUrl);
-
+                //
                 int titleIndex = query.getColumnIndex(Constants.SUB_TITLE);
                 String title = query.getString(titleIndex);
                 album.setAlbumTitle(title);
-
-                int descriptionIndex = query.getColumnIndex(Constants.SUB_DESCRIPTION);
-                String description = query.getString(descriptionIndex);
+                //
+                int desIndex = query.getColumnIndex(Constants.SUB_DESCRIPTION);
+                String description = query.getString(desIndex);
                 album.setAlbumIntro(description);
-
-                int tracksCountIndex = query.getColumnIndex(Constants.SUB_TRACKS_COUNT);
-                long tracksCount = query.getLong(tracksCountIndex);
+                //
+                int trackIndex = query.getColumnIndex(Constants.SUB_TRACKS_COUNT);
+                int tracksCount = query.getInt(trackIndex);
                 album.setIncludeTrackCount(tracksCount);
-
-                int playCountIndex = query.getColumnIndex(Constants.SUB_PLAY_COUNT);
-                long playCount = query.getLong(playCountIndex);
+                //
+                int playIndex = query.getColumnIndex(Constants.SUB_PLAY_COUNT);
+                int playCount = query.getInt(playIndex);
                 album.setPlayCount(playCount);
+                //
+                int albumIndex = query.getColumnIndex(Constants.SUB_ALBUM_ID);
+                int albumId = query.getInt(albumIndex);
+                album.setId(albumId);
 
-                int authorIndex = query.getColumnIndex(Constants.SUB_AUTHOR_NAME);
-                String authorName = query.getString(authorIndex);
+                int nameIndex = query.getColumnIndex(Constants.SUB_AUTHOR_NAME);
+                String authorName = query.getString(nameIndex);
                 Announcer announcer = new Announcer();
                 announcer.setNickname(authorName);
-
-                int albumIdIndex = query.getColumnIndex(Constants.SUB_ALBUM_ID);
-                long albumId = query.getLong(albumIdIndex);
-                album.setId(albumId);
+                album.setAnnouncer(announcer);
+                result.add(album);
             }
             query.close();
-            database.setTransactionSuccessful();
-            if (mCallback != null) {
-                mCallback.onSubListLoaded(result);
-            }
+            db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (database != null) {
-                database.endTransaction();
-                database.close();
+            if (db != null) {
+                db.endTransaction();
+                db.close();
+            }
+            //把数据通知出去
+            if (mCallback != null) {
+                mCallback.onSubListLoaded(result);
             }
         }
     }

@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements IPlayerCallback {
             @Override
             public void onTabClick(int index) {
                 if (mContentPager != null) {
-                    mContentPager.setCurrentItem(index);
+                    mContentPager.setCurrentItem(index, false);
                 }
             }
         });

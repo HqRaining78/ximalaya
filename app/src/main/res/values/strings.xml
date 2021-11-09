@@ -22,4 +22,6 @@
     <string name="sub_tips_text">+ 订阅</string>
 
     <string name="listener_as_you_like_text">听你所听</string>
+    <string name="cancel_sub_failure">取消订阅失败</string>
+    <string name="cancel_sub_success">取消订阅成功</string>
 </resources>

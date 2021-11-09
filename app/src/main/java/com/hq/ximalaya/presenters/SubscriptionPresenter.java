@@ -1,11 +1,12 @@
 package com.hq.ximalaya.presenters;
 
 import com.hq.ximalaya.base.BaseApplication;
-import com.hq.ximalaya.base.BasePresenter;
 import com.hq.ximalaya.data.ISubDaoCallback;
 import com.hq.ximalaya.data.SubscriptionDAO;
 import com.hq.ximalaya.interfaces.ISubscriptionCallback;
 import com.hq.ximalaya.interfaces.ISubscriptionPresenter;
+import com.hq.ximalaya.utils.Constants;
+import com.hq.ximalaya.utils.LogUtil;
 import com.ximalaya.ting.android.opensdk.model.album.Album;
 
 import java.util.ArrayList;
@@ -13,69 +14,75 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.reactivex.rxjava3.subjects.MaybeSubject;
+
 
 public class SubscriptionPresenter implements ISubscriptionPresenter, ISubDaoCallback {
 
-    private final SubscriptionDAO mSubscriptionDAO;
+    private static final String TAG = "SubscriptionPresenter";
+    private final SubscriptionDAO mSubscriptionDao;
     private Map<Long, Album> mData = new HashMap<>();
     private List<ISubscriptionCallback> mCallbacks = new ArrayList<>();
 
     private SubscriptionPresenter() {
-        mSubscriptionDAO = SubscriptionDAO.getInstance();
-        mSubscriptionDAO.setCallback(this);
-        listSubscriptions();
+        mSubscriptionDao = SubscriptionDAO.getInstance();
+        mSubscriptionDao.setCallback(this);
+    }
+
+    private void listSubscriptions() {
+        Observable.create(new ObservableOnSubscribe<Object>() {
+            @Override
+            public void subscribe(ObservableEmitter<Object> emitter) throws Exception {
+                //只调用，不处理结果
+                if (mSubscriptionDao != null) {
+                    mSubscriptionDao.listAlbums();
+                }
+            }
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     private static SubscriptionPresenter sInstance = null;
+
     public static SubscriptionPresenter getInstance() {
         if (sInstance == null) {
             synchronized (SubscriptionPresenter.class) {
-                if (sInstance != null) {
-                    sInstance = new SubscriptionPresenter();
-                }
+                sInstance = new SubscriptionPresenter();
             }
         }
         return sInstance;
     }
 
-    private void listSubscriptions() {
-        Observable.create(new ObservableOnSubscribe<Object>() {
 
+    @Override
+    public void addSubscription(final Album album) {
+        //判断当前的订阅数量，不能超过100
+        if (mData.size() >= Constants.MAX_SUB_COUNT) {
+            //给出提示
+            for (ISubscriptionCallback callback : mCallbacks) {
+                callback.onSubFull();
+            }
+            return;
+        }
+        Observable.create(new ObservableOnSubscribe<Object>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<Object> emitter) throws Throwable {
-                if (mSubscriptionDAO != null) {
-                    mSubscriptionDAO.listAlbums();
+            public void subscribe(ObservableEmitter<Object> emitter) throws Exception {
+                if (mSubscriptionDao != null) {
+                    mSubscriptionDao.addAlbum(album);
                 }
             }
         }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     @Override
-    public void addSubscription(Album album) {
+    public void deleteSubscription(final Album album) {
         Observable.create(new ObservableOnSubscribe<Object>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<Object> emitter) throws Throwable {
-                if (mSubscriptionDAO != null) {
-                    mSubscriptionDAO.addAlbum(album);
-                }
-            }
-        }).subscribeOn(Schedulers.io()).subscribe();
-    }
-
-    @Override
-    public void deleteSubscription(Album album) {
-        Observable.create(new ObservableOnSubscribe<Object>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Object> emitter) throws Throwable {
-                if (mSubscriptionDAO != null) {
-                    mSubscriptionDAO.delAlbum(album);
+            public void subscribe(ObservableEmitter<Object> emitter) throws Exception {
+                if (mSubscriptionDao != null) {
+                    mSubscriptionDao.delAlbum(album);
                 }
             }
         }).subscribeOn(Schedulers.io()).subscribe();
@@ -89,6 +96,7 @@ public class SubscriptionPresenter implements ISubscriptionPresenter, ISubDaoCal
     @Override
     public boolean isSub(Album album) {
         Album result = mData.get(album.getId());
+        //不为空，表示已经订阅
         return result != null;
     }
 
@@ -105,10 +113,14 @@ public class SubscriptionPresenter implements ISubscriptionPresenter, ISubDaoCal
     }
 
     @Override
-    public void onAddResult(boolean isSuccess) {
+    public void onAddResult(final boolean isSuccess) {
+        LogUtil.d(TAG, "listSubscriptions after add...");
+        listSubscriptions();
+        //添加结果的回调
         BaseApplication.getHandler().post(new Runnable() {
             @Override
             public void run() {
+                LogUtil.d(TAG, "update ui for add result.");
                 for (ISubscriptionCallback callback : mCallbacks) {
                     callback.onAddResult(isSuccess);
                 }
@@ -117,7 +129,9 @@ public class SubscriptionPresenter implements ISubscriptionPresenter, ISubDaoCal
     }
 
     @Override
-    public void onDeleteResult(boolean isSuccess) {
+    public void onDeleteResult(final boolean isSuccess) {
+        listSubscriptions();
+        //删除订阅的回调
         BaseApplication.getHandler().post(new Runnable() {
             @Override
             public void run() {
@@ -129,11 +143,13 @@ public class SubscriptionPresenter implements ISubscriptionPresenter, ISubDaoCal
     }
 
     @Override
-    public void onSubListLoaded(List<Album> result) {
+    public void onSubListLoaded(final List<Album> result) {
+        //加载数据的回调
+        mData.clear();
         for (Album album : result) {
             mData.put(album.getId(), album);
         }
-
+        //通知UI更新
         BaseApplication.getHandler().post(new Runnable() {
             @Override
             public void run() {

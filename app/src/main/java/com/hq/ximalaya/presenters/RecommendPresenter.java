@@ -15,6 +15,7 @@ public class RecommendPresenter implements IRecommendPresenter {
     public static final String TAG = "RecommendPresenter";
     private List<IRecommendCallback> mCallbacks = new ArrayList<>();
     private List<Album> mCurrentRecommend = null;
+    private List<Album> mAlbumList;
 
     private RecommendPresenter() {}
     private static RecommendPresenter sInstance = null;
@@ -37,13 +38,18 @@ public class RecommendPresenter implements IRecommendPresenter {
 
     // 获取推荐内容
     private void getRecommendData() {
+        if (mAlbumList != null && mAlbumList.size() > 0) {
+            handlerRecommendResult(mAlbumList);
+            return;
+        }
+
         XimalayaApi.getInstance().getRecommendList(new IDataCallBack<GussLikeAlbumList>() {
             @Override
             public void onSuccess(GussLikeAlbumList gussLikeAlbumList) {
                 if (gussLikeAlbumList != null) {
-                    List<Album> albumList = gussLikeAlbumList.getAlbumList();
-                    LogUtil.d(TAG, "count ====> " + albumList.size());
-                    handlerRecommendResult(albumList);
+                    mAlbumList = gussLikeAlbumList.getAlbumList();
+                    LogUtil.d(TAG, "count ====> " + mAlbumList.size());
+                    handlerRecommendResult(mAlbumList);
                 }
             }
 

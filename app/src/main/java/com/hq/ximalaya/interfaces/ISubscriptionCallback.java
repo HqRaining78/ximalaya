@@ -9,4 +9,5 @@ public interface ISubscriptionCallback {
     void onDeleteResult(boolean isSuccess);
     void onSubscriptionLoaded(List<Album> result);
 
+    void onSubFull();
 }

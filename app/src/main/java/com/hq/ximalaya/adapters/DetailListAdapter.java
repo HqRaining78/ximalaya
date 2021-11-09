@@ -21,6 +21,7 @@ public class DetailListAdapter extends RecyclerView.Adapter<DetailListAdapter.De
     private final SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
     private final SimpleDateFormat mDuration = new SimpleDateFormat("mm:ss", Locale.CHINA);
     private ItemClickListener mItemClickListener = null;
+    private ItemLongClickListener mItemLongClickListener = null;
 
     @NonNull
     @Override
@@ -55,6 +56,15 @@ public class DetailListAdapter extends RecyclerView.Adapter<DetailListAdapter.De
                 }
             }
         });
+        itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mItemLongClickListener != null) {
+                    mItemLongClickListener.onItemLongClick(track);
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -78,7 +88,16 @@ public class DetailListAdapter extends RecyclerView.Adapter<DetailListAdapter.De
     public void setItemClickListener(ItemClickListener listener) {
         mItemClickListener = listener;
     }
+
+    public void setItemLongClickListener(ItemLongClickListener listener) {
+        mItemLongClickListener = listener;
+    }
+
     public interface ItemClickListener {
         void onItemClick(List<Track> detailData, int position);
+    }
+
+    public interface ItemLongClickListener {
+        void onItemLongClick(Track track);
     }
 }
